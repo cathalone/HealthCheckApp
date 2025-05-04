@@ -1,89 +1,57 @@
 package com.example.healthcheckapplication.signals;
 
-import androidx.annotation.NonNull;
+public class BinarySignal extends Signal<Boolean>{
 
-public class BinarySignal {
-    private final boolean[] signalData;
-    private final int signalLength;
-    private String signalName = "SIGNAL";
+    public BinarySignal(Boolean[] signalData) {
+        super(signalData);
+    }
+
+    public BinarySignal(Boolean[] signalData, String signalName) {
+        super(signalData, signalName);
+    }
+
+    public BinarySignal(Signal<Boolean> signal) {
+        super(signal);
+    }
 
     public BinarySignal(boolean[] signalData) {
-
-        this.signalData = signalData;
-        this.signalLength = signalData.length;
-
+        super(valueOf(signalData));
     }
 
     public BinarySignal(boolean[] signalData, String signalName) {
-
-        this.signalData = signalData;
-        this.signalLength = signalData.length;
-        this.signalName = signalName;
-
+        super(valueOf(signalData), signalName);
     }
 
-    public boolean[] getSignalData() {
-        return signalData;
+    public static Boolean[] valueOf (boolean[] array) {
+        Boolean[] wrappedSignalData = new Boolean[array.length];
+        for (int i = 0; i < array.length; i++) {
+            wrappedSignalData[i] = array[i];
+        }
+        return wrappedSignalData;
     }
 
-    public int getSignalLength() {
-        return signalLength;
+    public static boolean[] valueOf (Boolean[] array) {
+        boolean[] unwrappedSignalData = new boolean[array.length];
+        for (int i = 0; i < array.length; i++) {
+            unwrappedSignalData[i] = array[i];
+        }
+        return unwrappedSignalData;
     }
 
-    public String getSignalName() {
-        return signalName;
-    }
-
-    public void setSignalName(String signalName) {
-        this.signalName = signalName;
-    }
-
+    @Override
     public BinarySignal getSignalShifted(int range, Values shiftWith) {
-
-        if (shiftWith != Values.SIGNAL) {
-
-            return this.getSignalShifted(range, this.findValue(shiftWith));
-
-        } else {
-
-            boolean[] newSignal = new boolean[this.signalLength];
-
-            for (int i = 0; i < this.signalLength; i++) {
-                if (i + range >= this.signalLength) {
-                    newSignal[i + range - this.signalLength] = this.signalData[i];
-                } else if (i + range < 0) {
-                    newSignal[i + range + this.signalLength] = this.signalData[i];
-                } else {
-                    newSignal[i + range] = this.signalData[i];
-                }
-            }
-            return new BinarySignal(newSignal);
-        }
-
+        return new BinarySignal(super.getSignalShifted(range, shiftWith));
     }
 
-    public BinarySignal getSignalShifted(int range, boolean shiftWith) {
-        boolean[] newSignal = new boolean[this.signalLength];
-
-        for (int i = 0; i < this.signalLength; i++) {
-
-            if (i + range >= this.signalLength) {
-                newSignal[i + range - this.signalLength] = shiftWith;
-            } else if (i + range < 0) {
-                newSignal[i + range + this.signalLength] = shiftWith;
-            } else {
-                newSignal[i + range] = this.signalData[i];
-            }
-
-        }
-
-        return new BinarySignal(newSignal);
+    @Override
+    public BinarySignal getSignalShifted(int range, Boolean shiftWith) {
+        return new BinarySignal(super.getSignalShifted(range, shiftWith));
     }
 
-    public Signal getSignalDistancesBetweenUnits() {
+    public NumericalSignal getSignalDistancesBetweenUnits() {
 
         int numOfUnits = 0;
-        for (boolean element : this.signalData) {
+        for (Boolean element : this.signalData) {
             if (element) {
                 numOfUnits += 1;
             }
@@ -102,14 +70,14 @@ public class BinarySignal {
             }
         }
 
-        return new Signal(distancesSignal);
+        return new NumericalSignal(distancesSignal);
     }
 
-    public double findAggregatedDistancesBetweenUnits(Values distanceAggregation) {
+    public Double findAggregatedDistancesBetweenUnits(Values distanceAggregation) {
         return this.getSignalDistancesBetweenUnits().findValue(distanceAggregation);
     }
 
-    public Signal toNumericalSignal() {
+    public NumericalSignal toNumericalSignal() {
         double[] newSignal = new double[this.signalLength];
 
         for (int i = 0; i < this.signalLength; i++) {
@@ -118,79 +86,21 @@ public class BinarySignal {
             }
         }
 
-        return new Signal(newSignal);
+        return new NumericalSignal(newSignal);
     }
 
     public BinarySignal logicAndSignal(BinarySignal other) {
-        boolean[] newSignal = new boolean[this.signalLength];
+        Boolean[] newSignal = new Boolean[this.signalLength];
 
         for (int i = 0; i < this.signalLength; i++) {
-            if (this.signalData[i] && other.signalData[i]) {
-                newSignal[i] = true;
-            }
+            newSignal[i] = this.signalData[i] && other.signalData[i];
         }
 
         return new BinarySignal(newSignal);
     }
 
-    private static String signalToString(boolean[] signal, int maxArrayLenthToPrint, String separator) {
-        int signalLength = signal.length;
-
-        StringBuilder signalString = new StringBuilder();
-        signalString.append("[");
-
-        if (signalLength <= maxArrayLenthToPrint) {
-            for (int i = 0; i < signalLength; i++) {
-                signalString.append(signal[i]);
-                if (i < signalLength - 1) {
-                    signalString.append(", ");
-                }
-            }
-        } else {
-
-            int numberOfStartElements = (maxArrayLenthToPrint - 1) / 2;
-            int numberOfEndElements = maxArrayLenthToPrint - numberOfStartElements - 1;
-
-            for (int i = 0; i < numberOfStartElements; i++) {
-                signalString.append(signal[i]);
-                if (i < numberOfStartElements - 1) {
-                    signalString.append(", ");
-                } else {
-                    signalString.append(" ");
-                    signalString.append(separator);
-                    signalString.append(" ");
-                }
-            }
-
-            for (int i = 0; i < numberOfEndElements; i++) {
-                signalString.append(signal[i+(signalLength-numberOfEndElements)]);
-                if (i < numberOfEndElements - 1) {
-                    signalString.append(", ");
-                }
-            }
-        }
-
-        signalString.append("]");
-
-        return signalString.toString();
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        final int MAX_ARRAY_LENGTH_TO_PRINT = 7;
-        final String SEPARATOR = "...";
-        final String TEMPLATE = "SIGNAL: %s \nLENGTH: %s \n";
-
-        return String.format(TEMPLATE, signalToString(this.signalData, MAX_ARRAY_LENGTH_TO_PRINT, SEPARATOR),
-                this.signalLength);
-    }
-
-    public boolean findValue(Values value) {
-        switch (value) {
-            default:
-                return false;
-        }
+    public Boolean findValue(Values value) {
+        return value == Values.MAX;
     }
 
 }

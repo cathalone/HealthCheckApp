@@ -2,6 +2,7 @@ package com.example.healthcheckapplication;
 
 import android.graphics.Color;
 
+import com.example.healthcheckapplication.signals.NumericalSignal;
 import com.example.healthcheckapplication.signals.Signal;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
@@ -19,20 +20,20 @@ public class ECGChart {
             Color.rgb(49, 222, 63)
     };
     private final LineChart ECGChart;
-    private final Signal[] signals;
+    private final NumericalSignal[] signals;
     private final int numberOfSignals;
     private final ILineDataSet[] dataSets;
 
-    public ECGChart(LineChart ECGChart, Signal[] signals) {
+    public ECGChart(LineChart ECGChart, NumericalSignal[] signals) {
         this.ECGChart = ECGChart;
         this.signals = signals;
         this.numberOfSignals = signals.length;
         this.dataSets = new ILineDataSet[this.numberOfSignals];
     }
 
-    private LineDataSet makeDataSet(Signal signal, String label, int color) {
+    private LineDataSet makeDataSet(NumericalSignal signal, String label, int color) {
         ArrayList<Entry> data = new ArrayList<>();
-        double[] x = signal.getSignalData();
+        double[] x = NumericalSignal.valueOf(signal.getSignalData());
         for (int j = 0; j < x.length; j++) {
             data.add(new Entry(j, (float) x[j]));
         }

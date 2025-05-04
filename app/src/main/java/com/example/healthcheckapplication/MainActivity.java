@@ -10,6 +10,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.healthcheckapplication.signals.NumericalSignal;
 import com.example.healthcheckapplication.signals.Signal;
 import com.example.healthcheckapplication.signals.Values;
 import com.github.mikephil.charting.charts.LineChart;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        ECG ecg = new ECG(120, 8000);
+        ECG ecg = new ECG(120, 3000);
 
         WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
 
@@ -47,17 +48,17 @@ public class MainActivity extends AppCompatActivity {
                     getECGThread.start();
                     getECGThread.join();
 
-                    Signal originalSignal = ecg.getSignal().getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN).getSignalFiltered(Values.MEAN, 3, Values.MEDIAN).getSignalFiltered(Values.MEAN, 10, Values.MEDIAN).getSignalNormalized(-1,1);
+                    NumericalSignal originalSignal = ecg.getSignal().getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN).getSignalFiltered(Values.MEAN, 3, Values.MEDIAN).getSignalFiltered(Values.MEAN, 10, Values.MEDIAN).getSignalNormalized(-1.0,1.0);
                     originalSignal.setSignalName("PROCESSED ECG");
-                    Signal processedSignal = originalSignal.getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+                    NumericalSignal processedSignal = originalSignal.getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
                     processedSignal.setSignalName("FILTERED ECG");
-                    Signal filteredSignal = processedSignal.getSignalAutoCorrelation(Values.MEAN);
+                    NumericalSignal filteredSignal = processedSignal.getSignalAutoCorrelation(Values.MEAN);
                     filteredSignal.setSignalName("AUTOCORRELATION");
-                    Signal extremes = filteredSignal.getSignalExtremesWithBuffer(30,Values.MAX).toNumericalSignal();
+                    NumericalSignal extremes = filteredSignal.getSignalExtremesWithBuffer(30,Values.MAX).toNumericalSignal();
                     extremes.setSignalName("EXTREMES");
-                    System.out.println(filteredSignal.findAggregatedXDistanceBetweenExtremes(50, Values.MAX, Values.MEAN));
+                    System.out.println(filteredSignal.findAggregatedXDistanceBetweenExtremes(30, Values.MAX, Values.MEAN));
 
-                    ECGChart ecgChart = new ECGChart(lCh, new Signal[] {originalSignal, processedSignal, filteredSignal, extremes});
+                    ECGChart ecgChart = new ECGChart(lCh, new NumericalSignal[] {originalSignal, processedSignal, filteredSignal, extremes});
                     ecgChart.drawECGChart();
 
                     System.out.println(ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(50, Values.MAX, Values.MEAN), ecg.getSensorUpdateTiming()));

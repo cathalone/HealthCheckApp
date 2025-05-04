@@ -1,10 +1,11 @@
 package com.example.healthcheckapplication;
 
+import com.example.healthcheckapplication.signals.NumericalSignal;
 import com.example.healthcheckapplication.signals.Signal;
 
 public class ECG {
 
-    private Signal signal;
+    private NumericalSignal signal;
     private final int refreshRate;
     private final int ECGDurationInMillis;
     private final int sensorUpdateTiming;
@@ -17,11 +18,11 @@ public class ECG {
         this.signalLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
     }
 
-    public Signal getSignal() {
+    public NumericalSignal getSignal() {
         return signal;
     }
 
-    public void setSignal(Signal signal) {
+    public void setSignal(NumericalSignal signal) {
         this.signal = signal;
     }
 

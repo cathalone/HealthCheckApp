@@ -3,7 +3,7 @@ package com.example.healthcheckapplication;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
-import com.example.healthcheckapplication.signals.Signal;
+import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class WriteECGTask implements Runnable {
 
@@ -63,7 +63,7 @@ public class WriteECGTask implements Runnable {
             signal[i] = calculateAngelVelocity(Axis.XYZ, orientations, ecg.getSensorUpdateTiming());
         }
 
-        ecg.setSignal(new Signal(signal));
+        ecg.setSignal(new NumericalSignal(signal));
 
     }
 

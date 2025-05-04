@@ -4,11 +4,11 @@ import java.util.Arrays;
 
 public class ExtremesBinarySignal extends BinarySignal{
 
-    public ExtremesBinarySignal(boolean[] signalData) {
+    public ExtremesBinarySignal(Boolean[] signalData) {
         super(signalData);
     }
 
-    public ExtremesBinarySignal(boolean[] signalData, String signalName) {
+    public ExtremesBinarySignal(Boolean[] signalData, String signalName) {
         super(signalData, signalName);
     }
 
@@ -21,4 +21,5 @@ public class ExtremesBinarySignal extends BinarySignal{
     }
 
 }
+
 
