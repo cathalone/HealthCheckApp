@@ -1,8 +1,9 @@
-package com.example.healthcheckapplication;
+package com.example.healthcheckapplication.ecg;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
+import com.example.healthcheckapplication.activities.RotationSensorEventListener;
 import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class WriteECGTask implements Runnable {

@@ -1,4 +1,4 @@
-package com.example.healthcheckapplication;
+package com.example.healthcheckapplication.activities;
 
 import android.content.Context;
 import android.hardware.SensorManager;
@@ -10,13 +10,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.healthcheckapplication.R;
+import com.example.healthcheckapplication.ecg.ECG;
+import com.example.healthcheckapplication.ecg.ECGChart;
+import com.example.healthcheckapplication.ecg.WriteECGTask;
 import com.example.healthcheckapplication.signals.NumericalSignal;
-import com.example.healthcheckapplication.signals.Signal;
 import com.example.healthcheckapplication.signals.Values;
 import com.github.mikephil.charting.charts.LineChart;
 
 public class MainActivity extends AppCompatActivity {
-    private SensorManager sm;
     private LineChart lCh;
 
     @Override
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         lCh = findViewById(R.id.lineChart);
 
-        sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         ECG ecg = new ECG(120, 3000);
 

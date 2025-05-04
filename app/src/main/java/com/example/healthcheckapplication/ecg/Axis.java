@@ -1,4 +1,4 @@
-package com.example.healthcheckapplication;
+package com.example.healthcheckapplication.ecg;
 
 public enum Axis {
     X,

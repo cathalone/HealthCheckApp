@@ -1,9 +1,8 @@
-package com.example.healthcheckapplication;
+package com.example.healthcheckapplication.ecg;
 
 import android.graphics.Color;
 
 import com.example.healthcheckapplication.signals.NumericalSignal;
-import com.example.healthcheckapplication.signals.Signal;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;

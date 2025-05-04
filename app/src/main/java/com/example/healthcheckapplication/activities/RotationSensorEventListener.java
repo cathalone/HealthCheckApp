@@ -1,4 +1,4 @@
-package com.example.healthcheckapplication;
+package com.example.healthcheckapplication.activities;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
