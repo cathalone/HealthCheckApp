@@ -56,9 +56,10 @@ public class MainActivity extends AppCompatActivity {
                     processedSignal.setSignalName("FILTERED ECG");
                     NumericalSignal filteredSignal = processedSignal.getSignalAutoCorrelation(Values.MEAN);
                     filteredSignal.setSignalName("AUTOCORRELATION");
-                    NumericalSignal extremes = filteredSignal.getSignalExtremesWithBuffer(30,Values.MAX).toNumericalSignal();
+                    NumericalSignal extremes = filteredSignal.getExtremesBinarySignalFiltered(filteredSignal.getSignalExtremesWithBuffer(2), 0.2).logicAndSignal(filteredSignal.getSignalExtremesWithBuffer(2,Values.MAX)).toNumericalSignal();
                     extremes.setSignalName("EXTREMES");
                     System.out.println(filteredSignal.findAggregatedXDistanceBetweenExtremes(30, Values.MAX, Values.MEAN));
+                    System.out.println(filteredSignal.getSignalOfYDistancesBetweenExtremes(filteredSignal.getSignalExtremesWithBuffer(2)));
 
                     ECGChart ecgChart = new ECGChart(lCh, new NumericalSignal[] {originalSignal, processedSignal, filteredSignal, extremes});
                     ecgChart.drawECGChart();

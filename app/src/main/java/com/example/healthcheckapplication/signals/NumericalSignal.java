@@ -253,6 +253,58 @@ public class NumericalSignal extends Signal<Double>{
         return new ExtremesBinarySignal(new BinarySignal(newSignal).getSignalShifted(-bufferSize/2-1, Values.ZERO));
     }
 
+    public NumericalSignal getSignalOfExtremesValues(ExtremesBinarySignal extremesBinarySignal) {
+        int[] extremesIndexes = extremesBinarySignal.findExtremesIndexes();
+        double[] extremesValues = new double[extremesIndexes.length];
+        for (int i = 0; i < extremesIndexes.length; i++) {
+            extremesValues[i] = this.signalData[extremesIndexes[i]];
+        }
+        return new NumericalSignal(extremesValues);
+    }
+
+    public NumericalSignal getSignalOfYDistancesBetweenExtremes(ExtremesBinarySignal extremesBinarySignal) {
+        double[] extremesValues = valueOf(this.getSignalOfExtremesValues(extremesBinarySignal).getSignalData());
+        double[] YDistancesSignal = new double[extremesValues.length-1];
+
+        for (int i = 0; i < YDistancesSignal.length; i++) {
+            YDistancesSignal[i] = extremesValues[i+1]-extremesValues[i];
+        }
+        return new NumericalSignal(YDistancesSignal);
+    }
+
+    public BinarySignal getBinarySignalOfExtremesValuesFiltered(ExtremesBinarySignal extremesBinarySignal, double minYDistance) {
+        double[] YDistances = valueOf(this.getSignalOfYDistancesBetweenExtremes(extremesBinarySignal).getSignalData());
+        boolean[] keepValues = new boolean[YDistances.length + 1];
+
+        for (int i = 0; i < YDistances.length; i++) {
+            if (YDistances[i] > minYDistance) {
+                keepValues[i] = true;
+                keepValues[i+1] = true;
+            }
+        }
+
+        return new BinarySignal(keepValues);
+    }
+
+    public ExtremesBinarySignal getExtremesBinarySignalFiltered(ExtremesBinarySignal extremesBinarySignal, double minYDistance) {
+        boolean[] keepValues = BinarySignal.valueOf(this.getBinarySignalOfExtremesValuesFiltered(extremesBinarySignal, minYDistance).getSignalData());
+        int[] extremesIndexes = extremesBinarySignal.findExtremesIndexes();
+        boolean[] extremesBinarySignalFiltered = new boolean[extremesBinarySignal.getSignalLength()];
+
+        for (int i = 0; i < keepValues.length; i++) {
+            if (keepValues[i]) {
+                extremesBinarySignalFiltered[extremesIndexes[i]] = true;
+            }
+        }
+
+        return new ExtremesBinarySignal(extremesBinarySignalFiltered);
+
+    }
+
+
+
+
+
 //    public Signal getExtremesSignalFiltratedByYDistance(Signal originalSignal) {
 //        Double[] newSignal = new Double[this.signalLength];
 //        Double sigma = originalSignal.signalSigma;

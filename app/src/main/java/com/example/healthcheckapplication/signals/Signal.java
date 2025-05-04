@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 public class Signal<T> {
 
-    protected static int MAX_ARRAY_LENGTH_TO_PRINT = 9;
+    protected static int MAX_ARRAY_LENGTH_TO_PRINT = 20;
     protected static String SEPARATOR = "...";
     protected static String TEMPLATE_OF_ELEMENT = "%s";
     protected static String TEMPLATE = "SIGNAL: %s \nLENGTH: %s \n";
@@ -69,7 +69,7 @@ public class Signal<T> {
                     newSignal[i + range] = this.signalData[i];
                 }
             }
-            return new Signal<T>(newSignal);
+            return new Signal<>(newSignal);
         }
 
     }
@@ -88,7 +88,7 @@ public class Signal<T> {
             }
 
         }
-        return new Signal<T>(newSignal);
+        return new Signal<>(newSignal);
     }
 
     protected String signalToString(int maxArrayLengthToPrint, String templateOfElement, String separator) {
