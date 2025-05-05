@@ -32,6 +32,11 @@ public class NumericalSignal extends Signal<Double>{
         super(valueOf(signalData), signalName);
     }
 
+    @Override
+    public double[] getSignalAsDoubleArray() {
+        return valueOf(this.signalData);
+    }
+
     public static Double[] valueOf (double[] array) {
         Double[] wrappedSignalData = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -335,8 +340,8 @@ public class NumericalSignal extends Signal<Double>{
 //        return new Signal(newSignal);
 //    }
 
-    public Double findAggregatedXDistanceBetweenExtremes(int bufferSize, Values extrema, Values distanceAggregation) {
-        return this.getSignalExtremesWithBuffer(bufferSize, extrema).findAggregatedDistancesBetweenUnits(distanceAggregation);
+    public Double findAggregatedXDistanceBetweenExtremes(ExtremesBinarySignal extremesBinarySignal, Values distanceAggregation) {
+        return extremesBinarySignal.findAggregatedDistancesBetweenUnits(distanceAggregation);
     }
 
     private static String getTemplateOfElement(int numberOfCharactersAfterPoint) {

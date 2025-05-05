@@ -22,6 +22,17 @@ public class BinarySignal extends Signal<Boolean>{
         super(valueOf(signalData), signalName);
     }
 
+    @Override
+    public double[] getSignalAsDoubleArray() {
+        double[] doubleArray = new double[this.signalLength];
+        for (int i = 0; i < this.signalLength; i++) {
+            if (this.signalData[i]) {
+                doubleArray[i] = 1;
+            }
+        }
+        return doubleArray;
+    }
+
     public static Boolean[] valueOf (boolean[] array) {
         Boolean[] wrappedSignalData = new Boolean[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -78,15 +89,7 @@ public class BinarySignal extends Signal<Boolean>{
     }
 
     public NumericalSignal toNumericalSignal() {
-        double[] newSignal = new double[this.signalLength];
-
-        for (int i = 0; i < this.signalLength; i++) {
-            if (this.signalData[i]) {
-                newSignal[i] = 1;
-            }
-        }
-
-        return new NumericalSignal(newSignal);
+        return new NumericalSignal(this.getSignalAsDoubleArray());
     }
 
     public BinarySignal logicAndSignal(BinarySignal other) {
