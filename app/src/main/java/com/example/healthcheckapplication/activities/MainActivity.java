@@ -3,6 +3,9 @@ package com.example.healthcheckapplication.activities;
 import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,62 +36,75 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         lCh = findViewById(R.id.lineChart);
-        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        ECG ecg = new ECG(120, 3000);
-        WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
-
-        Thread thread = new Thread() {
+        Button startButton = findViewById(R.id.button);
+        OnClickListener oclStartButton = new OnClickListener() {
             @Override
-            public void run() {
+            public void onClick(View v) {
+                lCh.clear();
+                lCh.invalidate();
 
-                try {
+                SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+                ECG ecg = new ECG(120, 3000);
+                WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
 
-                    Thread getECGThread = new Thread(WriteECGTask);
-                    getECGThread.start();
-                    getECGThread.join();
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
 
-                    NumericalSignal originalSignal = ecg.getSignal()
-                            .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
-                            .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
-                            .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
-                            .getSignalNormalized(-1.0,1.0);
-                    originalSignal.setSignalName("PROCESSED ECG");
+                        try {
 
-                    NumericalSignal processedSignal = originalSignal
-                            .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
-                    processedSignal.setSignalName("FILTERED ECG");
+                            Thread getECGThread = new Thread(WriteECGTask);
+                            getECGThread.start();
+                            getECGThread.join();
 
-                    NumericalSignal filteredSignal = processedSignal
-                            .getSignalAutoCorrelation(Values.MEAN);
-                    filteredSignal.setSignalName("AUTO-CORRELATION");
+                            NumericalSignal originalSignal = ecg.getSignal()
+                                    .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
+                                    .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
+                                    .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
+                                    .getSignalNormalized(-1.0,1.0);
+                            originalSignal.setSignalName("PROCESSED ECG");
 
-                    ExtremesBinarySignal extremes = filteredSignal
-                            .getExtremesBinarySignalFiltered(filteredSignal
-                                    .getSignalExtremesWithBuffer(2), 0.2)
-                            .logicAndSignal(filteredSignal
-                                    .getSignalExtremesWithBuffer(2,Values.MAX));
-                    extremes.setSignalName("EXTREMES");
+                            NumericalSignal processedSignal = originalSignal
+                                    .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+                            processedSignal.setSignalName("FILTERED ECG");
 
-                    ECGChart ecgChart = new ECGChart(lCh, new IDrawableSignal[] {
-                            originalSignal,
-                            processedSignal,
-                            filteredSignal,
-                            extremes
-                    });
-                    ecgChart.drawECGChart();
+                            NumericalSignal filteredSignal = processedSignal
+                                    .getSignalAutoCorrelation(Values.MEAN);
+                            filteredSignal.setSignalName("AUTO-CORRELATION");
 
-                    System.out.println(ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN), ecg.getSensorUpdateTiming()));
+                            ExtremesBinarySignal extremes = filteredSignal
+                                    .getExtremesBinarySignalFiltered(filteredSignal
+                                            .getSignalExtremesWithBuffer(2), 0.2)
+                                    .logicAndSignal(filteredSignal
+                                            .getSignalExtremesWithBuffer(2,Values.MAX));
+                            extremes.setSignalName("EXTREMES");
 
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                            ECGChart ecgChart = new ECGChart(lCh, new IDrawableSignal[] {
+                                    originalSignal,
+                                    processedSignal,
+                                    filteredSignal,
+                                    extremes
+                            });
+                            ecgChart.drawECGChart();
+
+                            System.out.println(ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN), ecg.getSensorUpdateTiming()));
+
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    }
+                };
+
+                thread.start();
 
             }
         };
 
-        thread.start();
+        startButton.setOnClickListener(oclStartButton);
+
+
     }
 
     @Override

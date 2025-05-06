@@ -68,6 +68,10 @@ public class BinarySignal extends Signal<Boolean>{
             }
         }
 
+        if (numOfUnits == 0) {
+            return new NumericalSignal(new double[]{0});
+        }
+
         double[] distancesSignal = new double[numOfUnits-1];
         int currentUnitIndex = 0;
 
