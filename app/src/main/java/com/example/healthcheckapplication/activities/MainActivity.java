@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         });
         lCh = findViewById(R.id.lineChart);
         Button startButton = findViewById(R.id.button);
+        TextView pulse = findViewById(R.id.pulseText);
         OnClickListener oclStartButton = new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
                             ExtremesBinarySignal extremes = filteredSignal
                                     .getExtremesBinarySignalFiltered(filteredSignal
-                                            .getSignalExtremesWithBuffer(2), 0.2)
+                                            .getSignalExtremesWithBuffer(2), filteredSignal.findSigma())
                                     .logicAndSignal(filteredSignal
                                             .getSignalExtremesWithBuffer(2,Values.MAX));
                             extremes.setSignalName("EXTREMES");
@@ -88,7 +90,9 @@ public class MainActivity extends AppCompatActivity {
                             });
                             ecgChart.drawECGChart();
 
-                            System.out.println(ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN), ecg.getSensorUpdateTiming()));
+                            pulse.post(() -> {
+                                pulse.setText(String.format("PULSE: %s", ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN), ecg.getSensorUpdateTiming())));
+                            });
 
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);

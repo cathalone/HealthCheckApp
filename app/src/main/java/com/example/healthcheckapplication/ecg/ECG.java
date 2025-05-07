@@ -4,6 +4,7 @@ import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class ECG {
 
+    private final int extraTimeForSensorCalibratingInMillis;
     private NumericalSignal signal;
     private final int refreshRate;
     private final int ECGDurationInMillis;
@@ -15,6 +16,15 @@ public class ECG {
         this.ECGDurationInMillis = ECGDurationInMillis;
         this.sensorUpdateTiming = calculateTiming(refreshRate);
         this.signalLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.extraTimeForSensorCalibratingInMillis = 500;
+    }
+
+    public ECG(int refreshRate, int ECGDurationInMillis, int extraTimeForSensorCalibratingInMillis) {
+        this.refreshRate = refreshRate;
+        this.ECGDurationInMillis = ECGDurationInMillis;
+        this.sensorUpdateTiming = calculateTiming(refreshRate);
+        this.signalLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.extraTimeForSensorCalibratingInMillis = extraTimeForSensorCalibratingInMillis;
     }
 
     public NumericalSignal getSignal() {
@@ -31,6 +41,10 @@ public class ECG {
 
     public int getSensorUpdateTiming() {
         return this.sensorUpdateTiming;
+    }
+
+    public int getExtraTimeForSensorCalibratingInMillis() {
+        return extraTimeForSensorCalibratingInMillis;
     }
 
     private static int calculateTiming(int refreshRate) {

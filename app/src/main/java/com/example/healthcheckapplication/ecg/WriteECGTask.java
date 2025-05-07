@@ -80,6 +80,8 @@ public class WriteECGTask implements Runnable {
 
             this.sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
 
+            Thread.sleep(this.ecg.getExtraTimeForSensorCalibratingInMillis());
+
             writeECG(this.ecg, orientations);
 
             this.sensorManager.unregisterListener(sensorEventListener);
