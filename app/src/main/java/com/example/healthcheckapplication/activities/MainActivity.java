@@ -3,10 +3,10 @@ package com.example.healthcheckapplication.activities;
 import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -26,6 +26,7 @@ import com.example.healthcheckapplication.signals.Values;
 import com.example.healthcheckapplication.storage.InternalStorageFileHandler;
 import com.github.mikephil.charting.charts.LineChart;
 
+import java.io.File;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,11 +43,24 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
-
         lCh = findViewById(R.id.lineChart);
         Button startButton = findViewById(R.id.button);
         TextView pulse = findViewById(R.id.pulseText);
+        EditText editTextName = findViewById(R.id.editTextName);
+        EditText editTextDuration = findViewById(R.id.editTextDuration);
+
+        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
+
+        try {
+            ECGChart ecgChart = new ECGChart(lCh, new INumericalFormSignal[] {
+                    internalStorageFileHandler.readData("s_test_1.txt")
+            });
+            ecgChart.drawECGChart();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
         OnClickListener oclStartButton = new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 lCh.invalidate();
 
                 SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-                ECG ecg = new ECG(120, 2000);
+                ECG ecg = new ECG(120, Integer.parseInt(editTextDuration.getText().toString()),500);
                 WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
 
                 Thread thread = new Thread() {
@@ -74,16 +88,15 @@ public class MainActivity extends AppCompatActivity {
                                     .getSignalNormalized(-1.0,1.0);
                             originalSignal.setSignalName("PROCESSED ECG");
 
-                            NumericalSignal processedSignal = originalSignal
-                                    .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
-                            processedSignal.setSignalName("FILTERED ECG");
-
                             try {
-                                internalStorageFileHandler.saveSignal("test.txt", processedSignal);
+                                internalStorageFileHandler.saveSignal(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), originalSignal);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
 
+                            NumericalSignal processedSignal = originalSignal
+                                    .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+                            processedSignal.setSignalName("FILTERED ECG");
 
                             NumericalSignal filteredSignal = processedSignal
                                     .getSignalAutoCorrelation(Values.MEAN);
@@ -95,12 +108,6 @@ public class MainActivity extends AppCompatActivity {
                                     .logicAndSignal(filteredSignal
                                             .getSignalExtremesWithBuffer(2,Values.MAX));
                             extremes.setSignalName("EXTREMES");
-
-                            try {
-                                internalStorageFileHandler.saveSignal("test1.txt", extremes);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
 
                             ECGChart ecgChart = new ECGChart(lCh, new INumericalFormSignal[] {
                                     originalSignal,
@@ -115,17 +122,13 @@ public class MainActivity extends AppCompatActivity {
                                             .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
                                             ecg.getSensorUpdateTiming()))));
 
-                            Log.d("s","start");
-                            try {
-                                System.out.println(internalStorageFileHandler.readData("test.txt"));
-                                System.out.println(internalStorageFileHandler.readData("test1.txt"));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            Log.d("s","end");
-
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
+                        }
+
+                        for (File file : internalStorageFileHandler.getAllFiles()) {
+                            String filename = file.getName();
+                            System.out.println(filename);
                         }
 
                     }
