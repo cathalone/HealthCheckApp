@@ -11,13 +11,16 @@ public class WriteECGTask implements Runnable {
     private final ECG ecg;
     private final SensorManager sensorManager;
 
-    public WriteECGTask(ECG ecg, SensorManager sensorManager) {
+    private final Axis[] axes;
+
+    public WriteECGTask(ECG ecg, Axis[] axes, SensorManager sensorManager) {
         this.ecg = ecg;
         this.sensorManager = sensorManager;
+        this.axes = axes;
     }
 
-    private static int axisMapping(Axis axis) {
-        switch (axis) {
+    private static int axisMapping(Axis axes) {
+        switch (axes) {
             case Y:
                 return 1;
             case Z:
@@ -27,44 +30,71 @@ public class WriteECGTask implements Runnable {
         }
     }
 
-    private static double calculateAngelVelocity(Axis axis, float[] orientations, int sensorUpdateTiming) throws InterruptedException {
+    private static double[] calculateAngelVelocity(Axis[] axes, float[] orientations, int sensorUpdateTiming) throws InterruptedException {
 
-        if (axis == Axis.X || axis == Axis.Y || axis == Axis.Z) {
+        double[] angleOld = new double[axes.length];
+        double[] angleNew = new double[axes.length];
+        double[] velocity = new double[axes.length];
 
-            double angleOld = orientations[axisMapping(axis)];
-            Thread.sleep(sensorUpdateTiming);
-            double angleNew = orientations[axisMapping(axis)];
-
-            return (angleNew - angleOld) / sensorUpdateTiming;
-
-        } else {
-
-            double XAngleOld = orientations[0];
-            double YAngleOld = orientations[1];
-            double ZAngleOld = orientations[2];
-            Thread.sleep(sensorUpdateTiming);
-            double XAngleNew = orientations[0];
-            double YAngleNew = orientations[1];
-            double ZAngleNew = orientations[2];
-
-            double angelVelocityX = (XAngleNew - XAngleOld) / sensorUpdateTiming;
-            double angelVelocityY = (YAngleNew - YAngleOld) / sensorUpdateTiming;
-            double angelVelocityZ = (ZAngleNew - ZAngleOld) / sensorUpdateTiming;
-
-            return Math.sqrt(angelVelocityX * angelVelocityX + angelVelocityY * angelVelocityY + angelVelocityZ * angelVelocityZ);
-
+        for (int i = 0; i < axes.length; i++) {
+            angleOld[i] = orientations[axisMapping(axes[i])];
         }
+        Thread.sleep(sensorUpdateTiming);
+        for (int i = 0; i < axes.length; i++) {
+            angleNew[i] = orientations[axisMapping(axes[i])];
+        }
+
+        for (int i = 0; i < axes.length; i++) {
+            velocity[i] = (angleNew[i] - angleOld[i]) / sensorUpdateTiming;
+        }
+
+        return velocity;
+
+//        if (axis == Axis.X || axis == Axis.Y || axis == Axis.Z) {
+//
+//            double angleOld = orientations[axisMapping(axis)];
+//            Thread.sleep(sensorUpdateTiming);
+//            double angleNew = orientations[axisMapping(axis)];
+//
+//            return (angleNew - angleOld) / sensorUpdateTiming;
+//
+//        } else {
+//
+//            double XAngleOld = orientations[0];
+//            double YAngleOld = orientations[1];
+//            double ZAngleOld = orientations[2];
+//            Thread.sleep(sensorUpdateTiming);
+//            double XAngleNew = orientations[0];
+//            double YAngleNew = orientations[1];
+//            double ZAngleNew = orientations[2];
+//
+//            double angelVelocityX = (XAngleNew - XAngleOld) / sensorUpdateTiming;
+//            double angelVelocityY = (YAngleNew - YAngleOld) / sensorUpdateTiming;
+//            double angelVelocityZ = (ZAngleNew - ZAngleOld) / sensorUpdateTiming;
+//
+//            return Math.sqrt(angelVelocityX * angelVelocityX + angelVelocityY * angelVelocityY + angelVelocityZ * angelVelocityZ);
+//
+//        }
     }
 
-    private static void writeECG(ECG ecg, float[] orientations) throws InterruptedException {
+    private static void writeECG(Axis[] axes, ECG ecg, float[] orientations) throws InterruptedException {
 
-        double[] signal = new double[ecg.getSignalLength()];
+        double[][] signals = new double[axes.length][ecg.getSignalsLength()];
+        double[] currentElement;
 
-        for (int i = 0; i < ecg.getSignalLength(); i++) {
-            signal[i] = calculateAngelVelocity(Axis.XYZ, orientations, ecg.getSensorUpdateTiming());
+        for (int i = 0; i < ecg.getSignalsLength(); i++) {
+            currentElement = calculateAngelVelocity(axes, orientations, ecg.getSensorUpdateTiming());
+            for (int j = 0; j < axes.length; j++) {
+                signals[j][i] = currentElement[j];
+            }
         }
 
-        ecg.setSignal(new NumericalSignal(signal));
+        NumericalSignal[] numericalSignals = new NumericalSignal[axes.length];
+        for (int j = 0; j < axes.length; j++) {
+            numericalSignals[j] = new NumericalSignal(signals[j]);
+        }
+
+        ecg.setSignals(numericalSignals);
 
     }
 
@@ -82,7 +112,7 @@ public class WriteECGTask implements Runnable {
 
             Thread.sleep(this.ecg.getExtraTimeForSensorCalibratingInMillis());
 
-            writeECG(this.ecg, orientations);
+            writeECG(this.axes, this.ecg, orientations);
 
             this.sensorManager.unregisterListener(sensorEventListener);
 

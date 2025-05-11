@@ -5,17 +5,17 @@ import com.example.healthcheckapplication.signals.NumericalSignal;
 public class ECG {
 
     private final int extraTimeForSensorCalibratingInMillis;
-    private NumericalSignal signal;
+    private NumericalSignal[] signals;
     private final int refreshRate;
     private final int ECGDurationInMillis;
     private final int sensorUpdateTiming;
-    private final int signalLength;
+    private final int signalsLength;
 
     public ECG(int refreshRate, int ECGDurationInMillis) {
         this.refreshRate = refreshRate;
         this.ECGDurationInMillis = ECGDurationInMillis;
         this.sensorUpdateTiming = calculateTiming(refreshRate);
-        this.signalLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.signalsLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
         this.extraTimeForSensorCalibratingInMillis = 500;
     }
 
@@ -23,20 +23,20 @@ public class ECG {
         this.refreshRate = refreshRate;
         this.ECGDurationInMillis = ECGDurationInMillis;
         this.sensorUpdateTiming = calculateTiming(refreshRate);
-        this.signalLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.signalsLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
         this.extraTimeForSensorCalibratingInMillis = extraTimeForSensorCalibratingInMillis;
     }
 
-    public NumericalSignal getSignal() {
-        return signal;
+    public NumericalSignal[] getSignals() {
+        return signals;
     }
 
-    public void setSignal(NumericalSignal signal) {
-        this.signal = signal;
+    public void setSignals(NumericalSignal[] signals) {
+        this.signals = signals;
     }
 
-    public int getSignalLength() {
-        return this.signalLength;
+    public int getSignalsLength() {
+        return this.signalsLength;
     }
 
     public int getSensorUpdateTiming() {

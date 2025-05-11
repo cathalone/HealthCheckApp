@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.healthcheckapplication.R;
+import com.example.healthcheckapplication.ecg.Axis;
 import com.example.healthcheckapplication.ecg.ECG;
 import com.example.healthcheckapplication.ecg.ECGChart;
 import com.example.healthcheckapplication.ecg.WriteECGTask;
@@ -30,7 +31,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
-    private LineChart lCh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,33 +43,36 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        lCh = findViewById(R.id.lineChart);
+        LineChart[] lineCharts = new LineChart[]{findViewById(R.id.lineChart1), findViewById(R.id.lineChart2), findViewById(R.id.lineChart3)};
+
         Button startButton = findViewById(R.id.button);
         TextView pulse = findViewById(R.id.pulseText);
         EditText editTextName = findViewById(R.id.editTextName);
         EditText editTextDuration = findViewById(R.id.editTextDuration);
 
-        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
+//        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
 
-        try {
-            ECGChart ecgChart = new ECGChart(lCh, new INumericalFormSignal[] {
-                    internalStorageFileHandler.readData("s_test_1.txt")
-            });
-            ecgChart.drawECGChart();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            ECGChart ecgChart = new ECGChart(lCh1, new INumericalFormSignal[] {
+//                    internalStorageFileHandler.readData("s_test_1.txt")
+//            });
+//            ecgChart.drawECGChart();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
 
         OnClickListener oclStartButton = new OnClickListener() {
             @Override
             public void onClick(View v) {
-                lCh.clear();
-                lCh.invalidate();
+                for (LineChart lineChart : lineCharts) {
+                    lineChart.clear();
+                    lineChart.invalidate();
+                }
 
                 SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
                 ECG ecg = new ECG(120, Integer.parseInt(editTextDuration.getText().toString()),500);
-                WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
+                WriteECGTask WriteECGTask = new WriteECGTask(ecg, new Axis[]{Axis.X, Axis.Y, Axis.Z}, sm);
 
                 Thread thread = new Thread() {
                     @Override
@@ -81,55 +84,25 @@ public class MainActivity extends AppCompatActivity {
                             getECGThread.start();
                             getECGThread.join();
 
-                            NumericalSignal originalSignal = ecg.getSignal()
-                                    .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
-                                    .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
-                                    .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
-                                    .getSignalNormalized(-1.0,1.0);
-                            originalSignal.setSignalName("PROCESSED ECG");
-
-                            try {
-                                internalStorageFileHandler.saveSignal(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), originalSignal);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            for (int i = 0; i < ecg.getSignals().length; i++) {
+                                processAndDraw(ecg.getSignals()[i], lineCharts[i]);
                             }
 
-                            NumericalSignal processedSignal = originalSignal
-                                    .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
-                            processedSignal.setSignalName("FILTERED ECG");
 
-                            NumericalSignal filteredSignal = processedSignal
-                                    .getSignalAutoCorrelation(Values.MEAN);
-                            filteredSignal.setSignalName("AUTO-CORRELATION");
 
-                            ExtremesBinarySignal extremes = filteredSignal
-                                    .getExtremesBinarySignalFiltered(filteredSignal
-                                            .getSignalExtremesWithBuffer(2), filteredSignal.findSigma())
-                                    .logicAndSignal(filteredSignal
-                                            .getSignalExtremesWithBuffer(2,Values.MAX));
-                            extremes.setSignalName("EXTREMES");
-
-                            ECGChart ecgChart = new ECGChart(lCh, new INumericalFormSignal[] {
-                                    originalSignal,
-                                    processedSignal,
-                                    filteredSignal,
-                                    extremes
-                            });
-                            ecgChart.drawECGChart();
-
-                            pulse.post(() -> pulse.setText(String.format("PULSE: %s",
-                                    ECG.calculatePulseFromExtremesDistance(filteredSignal
-                                            .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
-                                            ecg.getSensorUpdateTiming()))));
+//                            pulse.post(() -> pulse.setText(String.format("PULSE: %s",
+//                                    ECG.calculatePulseFromExtremesDistance(filteredSignal
+//                                            .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
+//                                            ecg.getSensorUpdateTiming()))));
 
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
 
-                        for (File file : internalStorageFileHandler.getAllFiles()) {
-                            String filename = file.getName();
-                            System.out.println(filename);
-                        }
+//                        for (File file : internalStorageFileHandler.getAllFiles()) {
+//                            String filename = file.getName();
+//                            System.out.println(filename);
+//                        }
 
                     }
                 };
@@ -142,6 +115,44 @@ public class MainActivity extends AppCompatActivity {
         startButton.setOnClickListener(oclStartButton);
 
 
+    }
+
+    public void processAndDraw(NumericalSignal signal, LineChart lineChart) {
+        NumericalSignal originalSignal = signal
+                .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
+                .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
+                .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
+                .getSignalNormalized(-1.0,1.0);
+        originalSignal.setSignalName("PROCESSED ECG");
+
+//                            try {
+//                                internalStorageFileHandler.saveSignal(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), originalSignal);
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+
+        NumericalSignal processedSignal = originalSignal
+                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+        processedSignal.setSignalName("FILTERED ECG");
+
+        NumericalSignal filteredSignal = processedSignal
+                .getSignalAutoCorrelation(Values.MEAN);
+        filteredSignal.setSignalName("AUTO-CORRELATION");
+
+        ExtremesBinarySignal extremes = filteredSignal
+                .getExtremesBinarySignalFiltered(filteredSignal
+                        .getSignalExtremesWithBuffer(2), filteredSignal.findSigma())
+                .logicAndSignal(filteredSignal
+                        .getSignalExtremesWithBuffer(2,Values.MAX));
+        extremes.setSignalName("EXTREMES");
+
+        ECGChart ecgChart = new ECGChart(lineChart, new INumericalFormSignal[] {
+                originalSignal,
+                processedSignal,
+                filteredSignal,
+                extremes
+        });
+        ecgChart.drawECGChart();
     }
 
     @Override
