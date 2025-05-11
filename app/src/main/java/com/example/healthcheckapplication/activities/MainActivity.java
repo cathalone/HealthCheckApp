@@ -3,6 +3,7 @@ package com.example.healthcheckapplication.activities;
 import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -19,10 +20,13 @@ import com.example.healthcheckapplication.ecg.ECG;
 import com.example.healthcheckapplication.ecg.ECGChart;
 import com.example.healthcheckapplication.ecg.WriteECGTask;
 import com.example.healthcheckapplication.signals.ExtremesBinarySignal;
-import com.example.healthcheckapplication.signals.IDrawableSignal;
+import com.example.healthcheckapplication.signals.INumericalFormSignal;
 import com.example.healthcheckapplication.signals.NumericalSignal;
 import com.example.healthcheckapplication.signals.Values;
+import com.example.healthcheckapplication.storage.InternalStorageFileHandler;
 import com.github.mikephil.charting.charts.LineChart;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private LineChart lCh;
@@ -37,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
+
         lCh = findViewById(R.id.lineChart);
         Button startButton = findViewById(R.id.button);
         TextView pulse = findViewById(R.id.pulseText);
@@ -47,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 lCh.invalidate();
 
                 SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-                ECG ecg = new ECG(120, 3000);
+                ECG ecg = new ECG(120, 2000);
                 WriteECGTask WriteECGTask = new WriteECGTask(ecg, sm);
 
                 Thread thread = new Thread() {
@@ -71,6 +78,13 @@ public class MainActivity extends AppCompatActivity {
                                     .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
                             processedSignal.setSignalName("FILTERED ECG");
 
+                            try {
+                                internalStorageFileHandler.saveSignal("test.txt", processedSignal);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
                             NumericalSignal filteredSignal = processedSignal
                                     .getSignalAutoCorrelation(Values.MEAN);
                             filteredSignal.setSignalName("AUTO-CORRELATION");
@@ -82,7 +96,13 @@ public class MainActivity extends AppCompatActivity {
                                             .getSignalExtremesWithBuffer(2,Values.MAX));
                             extremes.setSignalName("EXTREMES");
 
-                            ECGChart ecgChart = new ECGChart(lCh, new IDrawableSignal[] {
+                            try {
+                                internalStorageFileHandler.saveSignal("test1.txt", extremes);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            ECGChart ecgChart = new ECGChart(lCh, new INumericalFormSignal[] {
                                     originalSignal,
                                     processedSignal,
                                     filteredSignal,
@@ -90,9 +110,19 @@ public class MainActivity extends AppCompatActivity {
                             });
                             ecgChart.drawECGChart();
 
-                            pulse.post(() -> {
-                                pulse.setText(String.format("PULSE: %s", ECG.calculatePulseFromExtremesDistance(filteredSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN), ecg.getSensorUpdateTiming())));
-                            });
+                            pulse.post(() -> pulse.setText(String.format("PULSE: %s",
+                                    ECG.calculatePulseFromExtremesDistance(filteredSignal
+                                            .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
+                                            ecg.getSensorUpdateTiming()))));
+
+                            Log.d("s","start");
+                            try {
+                                System.out.println(internalStorageFileHandler.readData("test.txt"));
+                                System.out.println(internalStorageFileHandler.readData("test1.txt"));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d("s","end");
 
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);

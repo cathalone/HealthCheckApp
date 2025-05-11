@@ -1,6 +1,6 @@
 package com.example.healthcheckapplication.signals;
 
-public class BinarySignal extends Signal<Boolean>{
+public class BinarySignal extends Signal<Boolean> implements INumericalFormSignal{
 
     public BinarySignal(Boolean[] signalData) {
         super(signalData);
@@ -22,6 +22,14 @@ public class BinarySignal extends Signal<Boolean>{
         super(valueOf(signalData), signalName);
     }
 
+    public BinarySignal(double[] signalData) {
+        super(valueOf(signalData));
+    }
+
+    public BinarySignal(double[] signalData, String signalName) {
+        super(valueOf(signalData), signalName);
+    }
+
     @Override
     public double[] getSignalAsDoubleArray() {
         double[] doubleArray = new double[this.signalLength];
@@ -37,6 +45,14 @@ public class BinarySignal extends Signal<Boolean>{
         Boolean[] wrappedSignalData = new Boolean[array.length];
         for (int i = 0; i < array.length; i++) {
             wrappedSignalData[i] = array[i];
+        }
+        return wrappedSignalData;
+    }
+
+    public static Boolean[] valueOf (double[] array) {
+        Boolean[] wrappedSignalData = new Boolean[array.length];
+        for (int i = 0; i < array.length; i++) {
+            wrappedSignalData[i] = (array[i] > 0);
         }
         return wrappedSignalData;
     }

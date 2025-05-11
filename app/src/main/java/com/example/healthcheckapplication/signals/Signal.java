@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 
-public class Signal<T> implements IDrawableSignal{
+public class Signal<T>{
 
     protected static int MAX_ARRAY_LENGTH_TO_PRINT = 20;
     protected static String SEPARATOR = "...";
@@ -51,10 +51,6 @@ public class Signal<T> implements IDrawableSignal{
         this.signalName = signalName;
     }
 
-    @Override
-    public double[] getSignalAsDoubleArray() {
-        return new double[this.signalLength];
-    }
 
     public Signal<T> getSignalShifted(int range, Values shiftWith) {
 

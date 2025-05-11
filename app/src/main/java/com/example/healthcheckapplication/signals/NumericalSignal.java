@@ -7,7 +7,7 @@ import static java.lang.Math.sqrt;
 
 import androidx.annotation.NonNull;
 
-public class NumericalSignal extends Signal<Double>{
+public class NumericalSignal extends Signal<Double> implements INumericalFormSignal{
 
     protected static int NUMBER_OF_CHARACTERS_AFTER_POINT = 3;
     protected static String TEMPLATE = "SIGNAL: %s \nLENGTH: %s \nMIN: %s \nMAX: %s \nMEAN: %s \nSIGMA: %s \n";

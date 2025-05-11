@@ -22,6 +22,14 @@ public class ExtremesBinarySignal extends BinarySignal{
         super(signalData, signalName);
     }
 
+    public ExtremesBinarySignal(double[] signalData) {
+        super(signalData);
+    }
+
+    public ExtremesBinarySignal(double[] signalData, String signalName) {
+        super(signalData, signalName);
+    }
+
     public int findNumberOfExtremes() {
         int numberOfExtremes = 0;
         for (Boolean element : this.signalData) {

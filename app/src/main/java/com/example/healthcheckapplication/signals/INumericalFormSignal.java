@@ -1,6 +1,6 @@
 package com.example.healthcheckapplication.signals;
 
-public interface IDrawableSignal {
+public interface INumericalFormSignal {
 
     double[] getSignalAsDoubleArray();
 
