@@ -4,6 +4,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
 import com.example.healthcheckapplication.activities.RotationSensorEventListener;
+import com.example.healthcheckapplication.signals.AxisNumericalSignal;
 import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class WriteECGTask implements Runnable {
@@ -11,15 +12,15 @@ public class WriteECGTask implements Runnable {
     private final ECG ecg;
     private final SensorManager sensorManager;
 
-    private final Axis[] axes;
+    private final Axes[] axes;
 
-    public WriteECGTask(ECG ecg, Axis[] axes, SensorManager sensorManager) {
+    public WriteECGTask(ECG ecg, Axes[] axes, SensorManager sensorManager) {
         this.ecg = ecg;
         this.sensorManager = sensorManager;
         this.axes = axes;
     }
 
-    private static int axisMapping(Axis axes) {
+    private static int axisMapping(Axes axes) {
         switch (axes) {
             case Y:
                 return 1;
@@ -30,7 +31,7 @@ public class WriteECGTask implements Runnable {
         }
     }
 
-    private static double[] calculateAngelVelocity(Axis[] axes, float[] orientations, int sensorUpdateTiming) throws InterruptedException {
+    private static double[] calculateAngelVelocity(Axes[] axes, float[] orientations, int sensorUpdateTiming) throws InterruptedException {
 
         double[] angleOld = new double[axes.length];
         double[] angleNew = new double[axes.length];
@@ -50,7 +51,7 @@ public class WriteECGTask implements Runnable {
 
         return velocity;
 
-//        if (axis == Axis.X || axis == Axis.Y || axis == Axis.Z) {
+//        if (axis == Axes.X || axis == Axes.Y || axis == Axes.Z) {
 //
 //            double angleOld = orientations[axisMapping(axis)];
 //            Thread.sleep(sensorUpdateTiming);
@@ -77,7 +78,7 @@ public class WriteECGTask implements Runnable {
 //        }
     }
 
-    private static void writeECG(Axis[] axes, ECG ecg, float[] orientations) throws InterruptedException {
+    private static void writeECG(Axes[] axes, ECG ecg, float[] orientations) throws InterruptedException {
 
         double[][] signals = new double[axes.length][ecg.getSignalsLength()];
         double[] currentElement;
@@ -89,12 +90,12 @@ public class WriteECGTask implements Runnable {
             }
         }
 
-        NumericalSignal[] numericalSignals = new NumericalSignal[axes.length];
+        AxisNumericalSignal[] axisNumericalSignals = new AxisNumericalSignal[axes.length];
         for (int j = 0; j < axes.length; j++) {
-            numericalSignals[j] = new NumericalSignal(signals[j]);
+            axisNumericalSignals[j] = new AxisNumericalSignal(signals[j], axes[j]);
         }
 
-        ecg.setSignals(numericalSignals);
+        ecg.setSignals(axisNumericalSignals);
 
     }
 

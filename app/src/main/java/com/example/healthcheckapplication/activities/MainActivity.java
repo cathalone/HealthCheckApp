@@ -16,10 +16,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.healthcheckapplication.R;
-import com.example.healthcheckapplication.ecg.Axis;
+import com.example.healthcheckapplication.ecg.Axes;
 import com.example.healthcheckapplication.ecg.ECG;
 import com.example.healthcheckapplication.ecg.ECGChart;
 import com.example.healthcheckapplication.ecg.WriteECGTask;
+import com.example.healthcheckapplication.signals.AxisNumericalSignal;
 import com.example.healthcheckapplication.signals.ExtremesBinarySignal;
 import com.example.healthcheckapplication.signals.INumericalFormSignal;
 import com.example.healthcheckapplication.signals.NumericalSignal;
@@ -28,6 +29,7 @@ import com.example.healthcheckapplication.storage.InternalStorageFileHandler;
 import com.github.mikephil.charting.charts.LineChart;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,16 +52,12 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextName = findViewById(R.id.editTextName);
         EditText editTextDuration = findViewById(R.id.editTextDuration);
 
-//        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
-
-//        try {
-//            ECGChart ecgChart = new ECGChart(lCh1, new INumericalFormSignal[] {
-//                    internalStorageFileHandler.readData("s_test_1.txt")
-//            });
-//            ecgChart.drawECGChart();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
+        InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
+        try {
+            internalStorageFileHandler.deleteAllFiles();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
 
         OnClickListener oclStartButton = new OnClickListener() {
@@ -72,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
                 SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
                 ECG ecg = new ECG(120, Integer.parseInt(editTextDuration.getText().toString()),500);
-                WriteECGTask WriteECGTask = new WriteECGTask(ecg, new Axis[]{Axis.X, Axis.Y, Axis.Z}, sm);
+                WriteECGTask WriteECGTask = new WriteECGTask(ecg, new Axes[]{Axes.X, Axes.Y, Axes.Z}, sm);
 
                 Thread thread = new Thread() {
                     @Override
@@ -84,9 +82,30 @@ public class MainActivity extends AppCompatActivity {
                             getECGThread.start();
                             getECGThread.join();
 
-                            for (int i = 0; i < ecg.getSignals().length; i++) {
-                                processAndDraw(ecg.getSignals()[i], lineCharts[i]);
+                            NumericalSignal s1 = AxisNumericalSignal.euclideanMetric(ecg.getSignals());
+
+                            try {
+                                internalStorageFileHandler.saveECG(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), ecg);
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
+
+                            for (File file : internalStorageFileHandler.getAllFiles()) {
+                                String filename = file.getName();
+                                System.out.println(filename);
+                            }
+
+                            try {
+                                ECG ecg2 = internalStorageFileHandler.readECG("s_ttestt_1.txt");
+                                for (int i = 0; i < ecg2.getSignals().length; i++) {
+                                    processAndDraw(ecg2.getSignals()[i], lineCharts[i]);
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+
+
+
 
 
 
@@ -99,10 +118,7 @@ public class MainActivity extends AppCompatActivity {
                             throw new RuntimeException(e);
                         }
 
-//                        for (File file : internalStorageFileHandler.getAllFiles()) {
-//                            String filename = file.getName();
-//                            System.out.println(filename);
-//                        }
+
 
                     }
                 };
@@ -125,12 +141,6 @@ public class MainActivity extends AppCompatActivity {
                 .getSignalNormalized(-1.0,1.0);
         originalSignal.setSignalName("PROCESSED ECG");
 
-//                            try {
-//                                internalStorageFileHandler.saveSignal(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), originalSignal);
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-
         NumericalSignal processedSignal = originalSignal
                 .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
         processedSignal.setSignalName("FILTERED ECG");
@@ -150,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 originalSignal,
                 processedSignal,
                 filteredSignal,
-                extremes
+
         });
         ecgChart.drawECGChart();
     }

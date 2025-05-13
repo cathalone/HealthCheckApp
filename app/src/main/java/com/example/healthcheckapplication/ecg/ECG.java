@@ -1,11 +1,12 @@
 package com.example.healthcheckapplication.ecg;
 
+import com.example.healthcheckapplication.signals.AxisNumericalSignal;
 import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class ECG {
 
     private final int extraTimeForSensorCalibratingInMillis;
-    private NumericalSignal[] signals;
+    private AxisNumericalSignal[] signals;
     private final int refreshRate;
     private final int ECGDurationInMillis;
     private final int sensorUpdateTiming;
@@ -27,11 +28,29 @@ public class ECG {
         this.extraTimeForSensorCalibratingInMillis = extraTimeForSensorCalibratingInMillis;
     }
 
-    public NumericalSignal[] getSignals() {
+    public ECG(int refreshRate, int ECGDurationInMillis, AxisNumericalSignal[] signals) {
+        this.refreshRate = refreshRate;
+        this.ECGDurationInMillis = ECGDurationInMillis;
+        this.sensorUpdateTiming = calculateTiming(refreshRate);
+        this.signalsLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.extraTimeForSensorCalibratingInMillis = 500;
+        this.signals = signals;
+    }
+
+    public ECG(int refreshRate, int ECGDurationInMillis, int extraTimeForSensorCalibratingInMillis, AxisNumericalSignal[] signals) {
+        this.refreshRate = refreshRate;
+        this.ECGDurationInMillis = ECGDurationInMillis;
+        this.sensorUpdateTiming = calculateTiming(refreshRate);
+        this.signalsLength = calculateSignalLength(this.sensorUpdateTiming, ECGDurationInMillis);
+        this.extraTimeForSensorCalibratingInMillis = extraTimeForSensorCalibratingInMillis;
+        this.signals = signals;
+    }
+
+    public AxisNumericalSignal[] getSignals() {
         return signals;
     }
 
-    public void setSignals(NumericalSignal[] signals) {
+    protected void setSignals(AxisNumericalSignal[] signals) {
         this.signals = signals;
     }
 
@@ -45,6 +64,14 @@ public class ECG {
 
     public int getExtraTimeForSensorCalibratingInMillis() {
         return extraTimeForSensorCalibratingInMillis;
+    }
+
+    public int getRefreshRate() {
+        return this.refreshRate;
+    }
+
+    public int getECGDurationInMillis() {
+        return this.ECGDurationInMillis;
     }
 
     private static int calculateTiming(int refreshRate) {
