@@ -1,17 +1,17 @@
 package com.example.healthcheckapplication.ecg;
 
+import static java.lang.Math.abs;
+
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
 import com.example.healthcheckapplication.activities.RotationSensorEventListener;
 import com.example.healthcheckapplication.signals.AxisNumericalSignal;
-import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class WriteECGTask implements Runnable {
 
     private final ECG ecg;
     private final SensorManager sensorManager;
-
     private final Axes[] axes;
 
     public WriteECGTask(ECG ecg, Axes[] axes, SensorManager sensorManager) {
@@ -46,7 +46,7 @@ public class WriteECGTask implements Runnable {
         }
 
         for (int i = 0; i < axes.length; i++) {
-            velocity[i] = (angleNew[i] - angleOld[i]) / sensorUpdateTiming;
+            velocity[i] = abs((angleNew[i] - angleOld[i]) / sensorUpdateTiming);
         }
 
         return velocity;

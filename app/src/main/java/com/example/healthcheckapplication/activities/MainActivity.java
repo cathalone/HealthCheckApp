@@ -22,6 +22,7 @@ import com.example.healthcheckapplication.ecg.ECGChart;
 import com.example.healthcheckapplication.ecg.WriteECGTask;
 import com.example.healthcheckapplication.signals.AxisNumericalSignal;
 import com.example.healthcheckapplication.signals.ExtremesBinarySignal;
+import com.example.healthcheckapplication.signals.FourierTransform;
 import com.example.healthcheckapplication.signals.INumericalFormSignal;
 import com.example.healthcheckapplication.signals.NumericalSignal;
 import com.example.healthcheckapplication.signals.Values;
@@ -53,11 +54,11 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextDuration = findViewById(R.id.editTextDuration);
 
         InternalStorageFileHandler internalStorageFileHandler = new InternalStorageFileHandler(this);
-        try {
-            internalStorageFileHandler.deleteAllFiles();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            internalStorageFileHandler.deleteAllFiles();
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
 
 
         OnClickListener oclStartButton = new OnClickListener() {
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                             getECGThread.start();
                             getECGThread.join();
 
-                            NumericalSignal s1 = AxisNumericalSignal.euclideanMetric(ecg.getSignals());
+                            NumericalSignal s1 = NumericalSignal.getEuclideanMetricSignal(ecg.getSignals());
 
                             try {
                                 internalStorageFileHandler.saveECG(internalStorageFileHandler.generateFileName(editTextName.getText().toString()), ecg);
@@ -90,18 +91,13 @@ public class MainActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
 
-                            for (File file : internalStorageFileHandler.getAllFiles()) {
-                                String filename = file.getName();
-                                System.out.println(filename);
-                            }
+//                            for (File file : internalStorageFileHandler.getAllFiles()) {
+//                                String filename = file.getName();
+//                                System.out.println(filename);
+//                            }
 
-                            try {
-                                ECG ecg2 = internalStorageFileHandler.readECG("s_ttestt_1.txt");
-                                for (int i = 0; i < ecg2.getSignals().length; i++) {
-                                    processAndDraw(ecg2.getSignals()[i], lineCharts[i]);
-                                }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                            for (int i = 0; i < ecg.getSignals().length; i++) {
+                                processAndDraw(ecg.getSignals()[i], lineCharts[i]);
                             }
 
 
@@ -138,11 +134,16 @@ public class MainActivity extends AppCompatActivity {
                 .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
                 .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
                 .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
-                .getSignalNormalized(-1.0,1.0);
+                .getSignalNormalized(0.0,1.0);
         originalSignal.setSignalName("PROCESSED ECG");
+        System.out.println(originalSignal.findMax());
 
-        NumericalSignal processedSignal = originalSignal
-                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+//        NumericalSignal processedSignal = originalSignal
+//                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+//        processedSignal.setSignalName("FILTERED ECG");
+
+        FourierTransform fourierTransform = new FourierTransform(NumericalSignal.valueOf(originalSignal.getSignalData()));
+        NumericalSignal processedSignal = new NumericalSignal(fourierTransform.inverseFourierTransform(4));
         processedSignal.setSignalName("FILTERED ECG");
 
         NumericalSignal filteredSignal = processedSignal
@@ -158,8 +159,7 @@ public class MainActivity extends AppCompatActivity {
 
         ECGChart ecgChart = new ECGChart(lineChart, new INumericalFormSignal[] {
                 originalSignal,
-                processedSignal,
-                filteredSignal,
+                processedSignal
 
         });
         ecgChart.drawECGChart();

@@ -40,27 +40,4 @@ public class AxisNumericalSignal extends NumericalSignal {
         return axis;
     }
 
-    public static NumericalSignal euclideanMetric(AxisNumericalSignal[] axisNumericalSignals) {
-        int signalLength = axisNumericalSignals[0].signalLength;
-        int axesLength = axisNumericalSignals.length;
-        double[][] signalData = new double[axesLength][signalLength];
-        double[] newSignalData = new double[signalLength];
-        double tempSum;
-
-        for (int j = 0; j < axesLength; j++) {
-            signalData[j] = NumericalSignal.valueOf(axisNumericalSignals[j].getSignalData());
-        }
-
-        for (int i = 0; i < signalLength; i++) {
-            tempSum = 0;
-            for (int j = 0; j < axesLength; j++) {
-                tempSum += pow(signalData[j][i], 2);
-            }
-            newSignalData[i] = sqrt(tempSum);
-        }
-
-        return new NumericalSignal(newSignalData);
-
-    }
-
 }
