@@ -96,19 +96,50 @@ public class MainActivity extends AppCompatActivity {
 //                                System.out.println(filename);
 //                            }
 
-                            for (int i = 0; i < ecg.getSignals().length; i++) {
-                                processAndDraw(ecg.getSignals()[i], lineCharts[i]);
-                            }
 
+//                            for (int i = 0; i < ecg.getSignals().length; i++) {
+//                                processAndDraw(ecg.getSignals()[i], lineCharts[i]);
+//                            }
+                            NumericalSignal originalSignal = s1
+                                    .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
+                                    .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
+                                    .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
+                                    .getSignalNormalized(-1.0,1.0);
+                            originalSignal.setSignalName("PROCESSED ECG");
+                            System.out.println(originalSignal.findMax());
 
+//        NumericalSignal processedSignal = originalSignal
+//                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
+//        processedSignal.setSignalName("FILTERED ECG");
 
+                            FourierTransform fourierTransform = new FourierTransform(originalSignal);
+                            NumericalSignal processedSignal = fourierTransform.getSignalApproximated(4);
+                            processedSignal.setSignalName("FILTERED ECG");
 
+                            NumericalSignal filteredSignal = processedSignal
+                                    .getSignalAutoCorrelation(Values.MEAN);
+                            filteredSignal.setSignalName("AUTO-CORRELATION");
 
+                            ExtremesBinarySignal extremes = processedSignal
+                                    .getExtremesBinarySignalFiltered(processedSignal
+                                            .getSignalExtremesWithBuffer(2), processedSignal.findSigma())
+                                    .logicAndSignal(processedSignal
+                                            .getSignalExtremesWithBuffer(2,Values.MAX));
+                            extremes.setSignalName("EXTREMES");
 
-//                            pulse.post(() -> pulse.setText(String.format("PULSE: %s",
-//                                    ECG.calculatePulseFromExtremesDistance(filteredSignal
-//                                            .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
-//                                            ecg.getSensorUpdateTiming()))));
+                            ECGChart ecgChart = new ECGChart(lineCharts[0], new INumericalFormSignal[] {
+                                    originalSignal,
+                                    processedSignal,
+                                    filteredSignal,
+                                    extremes
+
+                            });
+                            ecgChart.drawECGChart();
+
+                            pulse.post(() -> pulse.setText(String.format("PULSE: %s",
+                                    ECG.calculatePulseFromExtremesDistance(processedSignal
+                                            .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
+                                            ecg.getSensorUpdateTiming()))));
 
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
@@ -142,8 +173,8 @@ public class MainActivity extends AppCompatActivity {
 //                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);
 //        processedSignal.setSignalName("FILTERED ECG");
 
-        FourierTransform fourierTransform = new FourierTransform(NumericalSignal.valueOf(originalSignal.getSignalData()));
-        NumericalSignal processedSignal = new NumericalSignal(fourierTransform.inverseFourierTransform(4));
+        FourierTransform fourierTransform = new FourierTransform(originalSignal);
+        NumericalSignal processedSignal = fourierTransform.getSignalApproximated(10);
         processedSignal.setSignalName("FILTERED ECG");
 
         NumericalSignal filteredSignal = processedSignal

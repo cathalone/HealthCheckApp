@@ -4,6 +4,8 @@ public interface INumericalFormSignal {
 
     double[] getSignalAsDoubleArray();
 
+    int getSignalLength();
+
     String getSignalName();
 
 }

@@ -9,14 +9,15 @@ import java.util.Comparator;
 
 public class FourierTransform {
     private final ComplexNumber[] complexAmplitudes;
-    private final double[] originalSignal;
+    private final INumericalFormSignal signal;
 
-    public FourierTransform(double[] originalSignal) {
-        this.complexAmplitudes = fourierTransform(originalSignal);
-        this.originalSignal = originalSignal;
+    public FourierTransform(INumericalFormSignal signal) {
+        this.signal = signal;
+        this.complexAmplitudes = fourierTransform(signal);
     }
 
-    public static ComplexNumber[] fourierTransform(double[] x) {
+    private static ComplexNumber[] fourierTransform(INumericalFormSignal signal) {
+        double[] x = signal.getSignalAsDoubleArray();
         int N = x.length;
         ComplexNumber[] X = new ComplexNumber[N];
 
@@ -31,55 +32,41 @@ public class FourierTransform {
         return X;
     }
 
-    public static double[] inverseFourierTransform(ComplexNumber[] X) {
-        int N = X.length;
-        double[] x = new double[N];
-
-        for (int k = 0; k < N; k++) {
-            ComplexNumber sum = new ComplexNumber(0,0);
-            for (int n = 0; n < N; n++) {
-                ComplexNumber temp = new ComplexNumber(cos(2 * PI * k * n / N), sin(2 * PI * k * n / N));
-                sum = sum.add(temp.multiply(X[n]));
-            }
-            x[k] = sum.getReal() / N;
-        }
-        return x;
-    }
-
-    public double[] inverseFourierTransform(int kQuantity) {
-        int[] kIndices = argsort(this.getAmplitudes());
-
-        int N = this.complexAmplitudes.length;
+    private static NumericalSignal inverseFourierTransform(ComplexNumber[] complexAmplitudes, int[] kIndices) {
+        int N = complexAmplitudes.length;
         double[] x = new double[N];
 
         for (int n = 0; n < N; n++) {
             ComplexNumber sum = new ComplexNumber(0,0);
-            for (int k = 0; k < N; k++) {
-                for (int i = kIndices.length - kQuantity; i < kIndices.length; i++) {
-                    if (k == kIndices[i]) {
-                        ComplexNumber temp = new ComplexNumber(cos(2 * PI * k * n / N), sin(2 * PI * k * n / N));
-                        sum = sum.add(temp.multiply(this.complexAmplitudes[k]));
-                    }
-                }
+            for (int k : kIndices) {
+                ComplexNumber temp = new ComplexNumber(cos(2 * PI * k * n / N), sin(2 * PI * k * n / N));
+                sum = sum.add(temp.multiply(complexAmplitudes[k]));
             }
             x[n] = sum.getReal() / N;
         }
-        return x;
+        return new NumericalSignal(x);
     }
 
-    public double[] inverseFourierTransform() {
-        int N = this.complexAmplitudes.length;
-        double[] x = new double[N];
-
-        for (int n = 0; n < N; n++) {
-            ComplexNumber sum = new ComplexNumber(0,0);
-            for (int k = 0; k < N; k++) {
-                ComplexNumber temp = new ComplexNumber(cos(2 * PI * k * n / N), sin(2 * PI * k * n / N));
-                sum = sum.add(temp.multiply(this.complexAmplitudes[k]));
-            }
-            x[n] = sum.getReal() / N;
+    public NumericalSignal getSignalApproximated() {
+        int[] kIndices = new int[this.signal.getSignalLength()];
+        for (int i = 0; i < kIndices.length; i++) {
+            kIndices[i] = i;
         }
-        return x;
+        return inverseFourierTransform(this.complexAmplitudes, kIndices);
+    }
+
+    public NumericalSignal getSignalApproximated(int numberOfDominantAmplitudes) {
+        int[] sortedKIndicesAll = argsort(this.getAmplitudes());
+        int N = sortedKIndicesAll.length;
+        int[] kIndices = new int[numberOfDominantAmplitudes];
+        for (int i = N - numberOfDominantAmplitudes; i < N; i++) {
+            kIndices[i - N + numberOfDominantAmplitudes] = sortedKIndicesAll[i];
+        }
+        return inverseFourierTransform(this.complexAmplitudes, kIndices);
+    }
+
+    public NumericalSignal getSignalApproximated(int[] amplitudesIndices) {
+        return inverseFourierTransform(this.complexAmplitudes, amplitudesIndices);
     }
 
     public double[] getAmplitudes() {
