@@ -307,6 +307,13 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
 
     }
 
+    public ExtremesBinarySignal getExtremesBinarySignalFiltered(Values extrema) {
+        return this.getExtremesBinarySignalFiltered(this
+                .getSignalExtremesWithBuffer(2), this.findSigma())
+        .logicAndSignal(this
+                .getSignalExtremesWithBuffer(2, extrema));
+    }
+
     public static NumericalSignal getEuclideanMetricSignal(NumericalSignal[] axisNumericalSignals) {
         int signalLength = axisNumericalSignals[0].signalLength;
         int axesLength = axisNumericalSignals.length;
@@ -326,6 +333,24 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
             newSignalData[i] = sqrt(tempSum);
         }
         return new NumericalSignal(newSignalData);
+    }
+
+    public NumericalSignal getMostCorrelatedComponent() {
+        FourierTransform fourierTransform = new FourierTransform(this);
+        int[] ampIndex = new int[1];
+        double maxCorrelation = -1;
+        double currentCorrelation;
+        int maxCorrelationIndex = 0;
+        for (int i = 0; i < this.signalLength; i++) {
+            ampIndex[0] = i;
+            NumericalSignal component = fourierTransform.getSignalApproximated(ampIndex);
+            currentCorrelation = this.findCorrelation(component);
+            if (currentCorrelation > maxCorrelation) {
+                maxCorrelation = currentCorrelation;
+                maxCorrelationIndex = i;
+            }
+        }
+        return fourierTransform.getSignalApproximated(new int[]{maxCorrelationIndex});
     }
 
     public Double findAggregatedXDistanceBetweenExtremes(ExtremesBinarySignal extremesBinarySignal, Values distanceAggregation) {
