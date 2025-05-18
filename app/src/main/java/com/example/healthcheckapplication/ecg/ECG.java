@@ -1,7 +1,6 @@
 package com.example.healthcheckapplication.ecg;
 
 import com.example.healthcheckapplication.signals.AxisNumericalSignal;
-import com.example.healthcheckapplication.signals.NumericalSignal;
 
 public class ECG {
 

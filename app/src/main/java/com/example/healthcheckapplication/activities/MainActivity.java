@@ -157,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(oclStartButton);
 
-
     }
 
     public void processAndDraw(NumericalSignal signal, LineChart lineChart) {
@@ -167,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
                 .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
                 .getSignalNormalized(0.0,1.0);
         originalSignal.setSignalName("PROCESSED ECG");
-        System.out.println(originalSignal.findMax());
 
 //        NumericalSignal processedSignal = originalSignal
 //                .getSignalFiltered(Values.MEAN, 15, Values.MEDIAN);

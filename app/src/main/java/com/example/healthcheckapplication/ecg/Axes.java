@@ -1,7 +1,5 @@
 package com.example.healthcheckapplication.ecg;
 
-import com.example.healthcheckapplication.signals.Signals;
-
 public enum Axes {
     X(0),
     Y(1),

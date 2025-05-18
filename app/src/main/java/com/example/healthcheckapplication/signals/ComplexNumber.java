@@ -1,6 +1,5 @@
 package com.example.healthcheckapplication.signals;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 public class ComplexNumber {

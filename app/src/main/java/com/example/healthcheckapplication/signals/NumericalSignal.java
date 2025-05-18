@@ -328,40 +328,6 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
         return new NumericalSignal(newSignalData);
     }
 
-
-
-
-
-//    public Signal getExtremesSignalFiltratedByYDistance(Signal originalSignal) {
-//        Double[] newSignal = new Double[this.signalLength];
-//        Double sigma = originalSignal.signalSigma;
-//
-//        Double previousElement = 0;
-//        int previousElementIndex = 0;
-//        Double currentElement = 0;
-//        int currentElementNumber = 0;
-//
-//        for (int i = 0; i < this.signalLength; i++) {
-//            if (this.signal[i] == 1) {
-//                currentElement = originalSignal.signal[i];
-//                if (currentElementNumber > 0) {
-//                    if (abs(previousElement - currentElement) > sigma) {
-//                        previousElement = currentElement;
-//                        newSignal[i] = 1;
-//                    } else {
-//                        continue;
-//                    }
-//                } else {
-//                    previousElement = currentElement;
-//                    newSignal[i] = 1;
-//                }
-//                currentElementNumber += 1;
-//            }
-//
-//        }
-//        return new Signal(newSignal);
-//    }
-
     public Double findAggregatedXDistanceBetweenExtremes(ExtremesBinarySignal extremesBinarySignal, Values distanceAggregation) {
         return extremesBinarySignal.findAggregatedDistancesBetweenUnits(distanceAggregation);
     }

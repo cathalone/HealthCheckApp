@@ -1,8 +1,6 @@
 package com.example.healthcheckapplication.signals;
 
 import com.example.healthcheckapplication.ecg.Axes;
-import static java.lang.Math.sqrt;
-import static java.lang.Math.pow;
 
 public class AxisNumericalSignal extends NumericalSignal {
     private final Axes axis;
