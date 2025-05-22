@@ -20,6 +20,7 @@ import com.example.healthcheckapplication.ecg.ECG;
 import com.example.healthcheckapplication.ecg.ECGChart;
 import com.example.healthcheckapplication.ecg.WriteECGTask;
 import com.example.healthcheckapplication.model.AnomalyDetectorWrapper;
+import com.example.healthcheckapplication.model.PerceptronWrapper;
 import com.example.healthcheckapplication.signals.ExtremesBinarySignal;
 import com.example.healthcheckapplication.signals.FourierTransform;
 import com.example.healthcheckapplication.signals.INumericalFormSignal;
@@ -130,11 +131,13 @@ public class MainActivity extends AppCompatActivity {
                                 .getSignalNormalized(-1.0,1.0);
                         originalSignal.setSignalName("PROCESSED ECG");
 
-                        AnomalyDetectorWrapper anomalyDetectorWrapper = new AnomalyDetectorWrapper(context, 249, 0.00018888764742871296f);
+                        AnomalyDetectorWrapper anomalyDetectorWrapper = new AnomalyDetectorWrapper(context, 250, 0.00034651169219805585f);
+                        PerceptronWrapper perceptronWrapper = new PerceptronWrapper(context, 250);
                         FourierTransform fourierTransform2 = new FourierTransform(originalSignal2.splitSignal(500)[0]);
-                        NumericalSignal amps3 = new NumericalSignal(Arrays.copyOfRange(fourierTransform2.getAmplitudes(), 0, 249));
+                        NumericalSignal amps3 = new NumericalSignal(Arrays.copyOfRange(fourierTransform2.getAmplitudes(), 0, 250));
 
                         System.out.println(anomalyDetectorWrapper.predict(amps3.getSignalAsFloatArray()));
+                        System.out.println(perceptronWrapper.predict(amps3.getSignalAsFloatArray()));
 
                         NumericalSignal[] numericalSignals = originalSignal2.splitSignal(500);
                         internalStorageFileHandler.writeSignalToCsv("signals.csv", numericalSignals);
