@@ -51,7 +51,6 @@ public class Signal<T>{
         this.signalName = signalName;
     }
 
-
     public Signal<T> getSignalShifted(int range, Values shiftWith) {
 
         if (shiftWith != Values.SIGNAL) {

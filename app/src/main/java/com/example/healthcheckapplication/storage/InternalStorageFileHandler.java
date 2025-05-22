@@ -15,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.List;
 
 public class InternalStorageFileHandler {
 
@@ -24,8 +26,8 @@ public class InternalStorageFileHandler {
         this.context = context;
     }
 
-    public String generateFileName(String name) {
-        String FILE_NAME_TEMPLATE = "s_%s_%s.txt";
+    public String generateFileName(String name, String fileFormat) {
+        String FILE_NAME_TEMPLATE = "s_%s_%s." + fileFormat;
         int greatestIndex = 0;
         for (File file : this.getAllFiles()) {
             String filename = file.getName();
@@ -123,5 +125,31 @@ public class InternalStorageFileHandler {
             }
             return Signals.getSignalById(signalType, signalData, signalName);
         }
+    }
+
+    public void writeSignalToCsv(String fileName, INumericalFormSignal[] signals) throws IOException {
+        int signalLength = signals[0].getSignalLength();
+        int signalsQuantity = signals.length;
+        double[][] signalData = new double[signalsQuantity][signalLength];
+
+        for (int i = 0; i < signalsQuantity; i++) {
+            signalData[i] = signals[i].getSignalAsDoubleArray();
+        }
+
+        File newFile = new File(context.getFilesDir(), fileName);
+        try (OutputStreamWriter outputStream = new OutputStreamWriter(new FileOutputStream(newFile, true))) {
+
+            for (int i = 0; i < signalsQuantity; i++) {
+                for (int j = 0; j < signalLength; j++) {
+                    outputStream.write(String.valueOf(signalData[i][j]));
+                    if (j < signalLength - 1) {
+                        outputStream.write(",");
+                    } else {
+                        outputStream.write("\n");
+                    }
+                }
+            }
+        }
+        System.out.println("OK");
     }
 }

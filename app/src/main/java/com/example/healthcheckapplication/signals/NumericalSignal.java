@@ -38,6 +38,14 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
         return valueOf(this.signalData);
     }
 
+    public float[] getSignalAsFloatArray() {
+        float[] wrappedSignalData = new float[signalLength];
+        for (int i = 0; i < signalLength; i++) {
+            wrappedSignalData[i] =  signalData[i].floatValue();
+        }
+        return wrappedSignalData;
+    }
+
     public static Double[] valueOf (double[] array) {
         Double[] wrappedSignalData = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -145,6 +153,16 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
             }
         }
         return new NumericalSignal(processedSignal);
+    }
+
+    public NumericalSignal[] splitSignal(int pieceLength) {
+        NumericalSignal[] splitSignal = new NumericalSignal[(int)(this.signalLength / pieceLength)];
+        int previousFrom = 0;
+        for (int i = 0; i < splitSignal.length; i++) {
+            splitSignal[i] = new NumericalSignal(Arrays.copyOfRange(this.signalData, previousFrom, previousFrom + pieceLength));
+            previousFrom += pieceLength;
+        }
+        return splitSignal;
     }
 
     public NumericalSignal getSignalFiltered(Values replaceWith, int bufferSize, Values startSignal) {
@@ -351,6 +369,11 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
             }
         }
         return fourierTransform.getSignalApproximated(new int[]{maxCorrelationIndex});
+    }
+
+    public NumericalSignal getSignalApproximated(double approximationPercent) {
+        FourierTransform fourierTransform = new FourierTransform(this);
+        return fourierTransform.getSignalApproximated((int) (approximationPercent * this.signalLength));
     }
 
     public Double findAggregatedXDistanceBetweenExtremes(ExtremesBinarySignal extremesBinarySignal, Values distanceAggregation) {
