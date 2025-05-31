@@ -90,14 +90,13 @@ public class PerceptronWrapper {
     }
 
     public void close() {
-        // ... (код закрытия остается без изменений) ...
         if (interpreter != null) {
             interpreter.close();
             interpreter = null;
             Log.i(TAG, "Interpreter closed.");
         }
         if (gpuDelegate != null) {
-            gpuDelegate.close(); // Важно закрывать делегат
+            gpuDelegate.close();
             gpuDelegate = null;
             Log.i(TAG, "GPU Delegate closed.");
         }

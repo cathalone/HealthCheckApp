@@ -46,10 +46,12 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        LineChart[] lineCharts = new LineChart[]{findViewById(R.id.lineChart1), findViewById(R.id.lineChart2), findViewById(R.id.lineChart3)};
+        LineChart[] lineCharts = new LineChart[]{findViewById(R.id.lineChart1), findViewById(R.id.lineChart2)};
 
         Button startButton = findViewById(R.id.button);
         TextView pulse = findViewById(R.id.pulseText);
+        TextView arrhythmia = findViewById(R.id.arrhythmiaText);
+        TextView height = findViewById(R.id.heightText);
         EditText editTextName = findViewById(R.id.editTextName);
         EditText editTextDuration = findViewById(R.id.editTextDuration);
 
@@ -78,8 +80,12 @@ public class MainActivity extends AppCompatActivity {
                         getECGThread.start();
                         getECGThread.join();
 
+
+                        //original signal
                         NumericalSignal s1 = NumericalSignal.getEuclideanMetricSignal(ecg.getSignals());
 
+
+                        //signal processing
                         NumericalSignal originalSignal = s1
                                 .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
                                 .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
@@ -87,16 +93,27 @@ public class MainActivity extends AppCompatActivity {
                                 .getSignalNormalized(-1.0,1.0).splitSignal(500)[0];
                         originalSignal.setSignalName("PROCESSED ECG");
 
+                        //neural network filtration
+                        AnomalyDetectorWrapper anomalyDetectorWrapper = new AnomalyDetectorWrapper(context, 250, 0.00034651169219805585f);
+                        PerceptronWrapper perceptronWrapper = new PerceptronWrapper(context, 250);
+                        FourierTransform fourierTransform2 = new FourierTransform(originalSignal.splitSignal(500)[0]);
+                        NumericalSignal amps3 = new NumericalSignal(Arrays.copyOfRange(fourierTransform2.getAmplitudes(), 0, 250));
+
+                        boolean flag1 = anomalyDetectorWrapper.predictWithThreshold(amps3.getSignalAsFloatArray());
+                        boolean flag2 = perceptronWrapper.predict(amps3.getSignalAsFloatArray())>0.55;
+
+                        System.out.println(anomalyDetectorWrapper.predictWithThreshold(amps3.getSignalAsFloatArray()));
+                        System.out.println(perceptronWrapper.predict(amps3.getSignalAsFloatArray()));
+                        //neural network filtration end
+
                         NumericalSignal processedSignal = originalSignal.getSignalApproximated(0.03);
                         processedSignal.setSignalName("FILTERED ECG");
 
                         NumericalSignal filteredSignal = processedSignal.getMostCorrelatedComponent();
                         filteredSignal.setSignalName("MOST_CORR");
 
-                        System.out.println(processedSignal);
-
-                        ExtremesBinarySignal extremes = filteredSignal
-                                .getExtremesBinarySignalFiltered(Values.MAX);
+                        ExtremesBinarySignal extremes = processedSignal
+                                .getExtremesBinarySignalFiltered(Values.MAX, 60);
                         extremes.setSignalName("EXTREMES");
 
                         ECGChart ecgChart = new ECGChart(lineCharts[0], new INumericalFormSignal[] {
@@ -108,50 +125,45 @@ public class MainActivity extends AppCompatActivity {
                         });
                         ecgChart.drawECGChart();
 
-                        pulse.post(() -> pulse.setText(String.format("PULSE: %s",
-                                ECG.calculatePulseFromExtremesDistance(processedSignal
-                                        .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
-                                        ecg.getSensorUpdateTiming()))));
+                        //pulse calculation
+                        if (flag2) {
+                            String pulseText = String.format("PULSE: %s",
+                                    ECG.calculatePulseFromExtremesDistance(processedSignal
+                                                    .findAggregatedXDistanceBetweenExtremes(extremes ,Values.MEAN),
+                                            ecg.getSensorUpdateTiming()));
+                            String arrhythmiaText = String.format("ARRHYTHMIA: %s",
+                                    (processedSignal.findAggregatedXDistanceBetweenExtremes(extremes ,Values.SIGMA)>10));
+                            String heightText = String.format("R-PEAKS: %s", (processedSignal.getSignalOfYDistancesBetweenExtremes(extremes).findValue(Values.SIGMA)>0.5));
+
+                            pulse.post(() -> pulse.setText(pulseText));
+
+                            arrhythmia.post(() -> arrhythmia.setText(arrhythmiaText));
+
+                            height.post(() -> height.setText(heightText));
 
 
-                        FourierTransform fourierTransform = new FourierTransform(processedSignal);
-                        NumericalSignal amps = new NumericalSignal(Arrays.copyOfRange(fourierTransform.getAmplitudes(), 0, processedSignal.getSignalLength()/2));
-                        ECGChart ecgChart1 = new ECGChart(lineCharts[1], new INumericalFormSignal[] {amps});
+                        } else {
+                            String pulseText = "PULSE: BAD ATTEMPT";
+                            String arrhythmiaText = "ARRHYTHMIA: BAD ATTEMPT";
+                            String heightText = "R-PEAKS: BAD ATTEMPT";
+
+                            pulse.post(() -> pulse.setText(pulseText));
+
+                            arrhythmia.post(() -> arrhythmia.setText(arrhythmiaText));
+
+                            height.post(() -> height.setText(heightText));
+                        }
+
+
+
+                        FourierTransform fourierTransform = new FourierTransform(originalSignal);
+                        NumericalSignal amps = new NumericalSignal(Arrays.copyOfRange(fourierTransform.getAmplitudes(), 0, originalSignal.getSignalLength()/2));
+
+                        NumericalSignal ampsReconstructed = new NumericalSignal(NumericalSignal.floatArrayToDoubleArray(anomalyDetectorWrapper.predict(amps.getSignalAsFloatArray())));
+                        ampsReconstructed.setSignalName("SIGNAL RECONSTRUCTED");
+
+                        ECGChart ecgChart1 = new ECGChart(lineCharts[1], new INumericalFormSignal[] {amps, ampsReconstructed});
                         ecgChart1.drawECGChart();
-
-                        FourierTransform fourierTransform1 = new FourierTransform(originalSignal);
-                        NumericalSignal amps1 = new NumericalSignal(Arrays.copyOfRange(fourierTransform1.getAmplitudes(), 0, originalSignal.getSignalLength()/2));
-                        ECGChart ecgChart2 = new ECGChart(lineCharts[2], new INumericalFormSignal[] {amps1});
-                        ecgChart2.drawECGChart();
-
-                        NumericalSignal originalSignal2 = s1
-                                .getSignalReplacedAnomaly(Values.MEDIAN, Values.MEAN)
-                                .getSignalFiltered(Values.MEAN, 3, Values.MEDIAN)
-                                .getSignalFiltered(Values.MEAN, 10, Values.MEDIAN)
-                                .getSignalNormalized(-1.0,1.0);
-                        originalSignal.setSignalName("PROCESSED ECG");
-
-                        AnomalyDetectorWrapper anomalyDetectorWrapper = new AnomalyDetectorWrapper(context, 250, 0.00034651169219805585f);
-                        PerceptronWrapper perceptronWrapper = new PerceptronWrapper(context, 250);
-                        FourierTransform fourierTransform2 = new FourierTransform(originalSignal2.splitSignal(500)[0]);
-                        NumericalSignal amps3 = new NumericalSignal(Arrays.copyOfRange(fourierTransform2.getAmplitudes(), 0, 250));
-
-                        System.out.println(anomalyDetectorWrapper.predict(amps3.getSignalAsFloatArray()));
-                        System.out.println(perceptronWrapper.predict(amps3.getSignalAsFloatArray()));
-
-                        NumericalSignal[] numericalSignals = originalSignal2.splitSignal(500);
-                        internalStorageFileHandler.writeSignalToCsv("signals.csv", numericalSignals);
-                        NumericalSignal[] amps2 = getAmpsFromSignals(numericalSignals);
-                        internalStorageFileHandler.writeSignalToCsv("amps.csv", amps2);
-
-
-
-//                        FourierTransform fourierTransform = new FourierTransform(processedSignal);
-//                        double[] sortedAmplitudes = Arrays.copyOf(fourierTransform.getAmplitudes(), fourierTransform.getAmplitudes().length);
-//                        Arrays.sort(sortedAmplitudes);
-//                        NumericalSignal amps = new NumericalSignal(Arrays.copyOfRange(sortedAmplitudes,processedSignal.getSignalLength() - (int)(processedSignal.getSignalLength()*0.03), processedSignal.getSignalLength()));
-//                        ECGChart ecgChart1 = new ECGChart(lineCharts[1], new INumericalFormSignal[] {amps});
-//                        ecgChart1.drawECGChart();
 
                     } catch (InterruptedException | IOException e) {
                         throw new RuntimeException(e);

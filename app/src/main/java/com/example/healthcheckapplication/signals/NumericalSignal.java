@@ -46,6 +46,14 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
         return wrappedSignalData;
     }
 
+    public static double[] floatArrayToDoubleArray(float[] array) {
+        double[] wrappedSignalData = new double[array.length];
+        for (int i = 0; i < array.length; i++) {
+            wrappedSignalData[i] = array[i];
+        }
+        return wrappedSignalData;
+    }
+
     public static Double[] valueOf (double[] array) {
         Double[] wrappedSignalData = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
@@ -327,9 +335,30 @@ public class NumericalSignal extends Signal<Double> implements INumericalFormSig
 
     public ExtremesBinarySignal getExtremesBinarySignalFiltered(Values extrema) {
         return this.getExtremesBinarySignalFiltered(this
-                .getSignalExtremesWithBuffer(2), this.findSigma())
+                .getSignalExtremesWithBuffer(2), this.findSigma()*1.5)
         .logicAndSignal(this
                 .getSignalExtremesWithBuffer(2, extrema));
+    }
+
+    public ExtremesBinarySignal getExtremesBinarySignalFiltered(Values extrema, double minXDistance) {
+        ExtremesBinarySignal extremesBinarySignal = this.getExtremesBinarySignalFiltered(this
+                        .getSignalExtremesWithBuffer(2), this.findSigma())
+                .logicAndSignal(this
+                        .getSignalExtremesWithBuffer(2, extrema));
+        boolean[] originalSignal = ExtremesBinarySignal.valueOf(extremesBinarySignal.getSignalData());
+        boolean[] result = Arrays.copyOf(originalSignal, originalSignal.length);
+
+        for (int i = 0; i < result.length; i++) {
+            if (result[i]) {
+                for (int j = 0; j < minXDistance; j++) {
+                    if (i + j + 1 < result.length) {
+                        result[i + j + 1] = false;
+                    }
+                }
+            }
+        }
+        return new ExtremesBinarySignal(result);
+
     }
 
     public static NumericalSignal getEuclideanMetricSignal(NumericalSignal[] axisNumericalSignals) {

@@ -32,8 +32,6 @@ public class AnomalyDetectorWrapper {
         this.threshold = detectionThreshold;
 
         Interpreter.Options options = new Interpreter.Options();
-        CompatibilityList compatList = new CompatibilityList();
-
 
         options.setNumThreads(4); // Например, 4 потока CPU
         Log.i(TAG, "GPU Delegate not supported. Using CPU with " + options.getNumThreads() + " threads.");
@@ -51,7 +49,6 @@ public class AnomalyDetectorWrapper {
     }
 
     private MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
-        // ... (код загрузки модели остается без изменений) ...
         AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
@@ -63,8 +60,7 @@ public class AnomalyDetectorWrapper {
         return mappedByteBuffer;
     }
 
-    public boolean predict(float[] inputData) {
-        // ... (код предсказания остается без изменений) ...
+    public float[] predict(float[] inputData) {
         if (inputData == null || inputData.length != modelInputSize) {
             Log.e(TAG, "Invalid input data. Expected size: " + modelInputSize + ", Got: " + (inputData == null ? "null" : inputData.length));
             throw new IllegalArgumentException("Input data size " + (inputData == null ? "null" : inputData.length) +
@@ -85,7 +81,7 @@ public class AnomalyDetectorWrapper {
             interpreter.run(inputBuffer, outputBuffer);
         } catch (Exception e) {
             Log.e(TAG, "Error during model inference.", e);
-            return false;
+            return new float[0];
         }
 
         outputBuffer.rewind();
@@ -94,6 +90,11 @@ public class AnomalyDetectorWrapper {
             reconstructions[i] = outputBuffer.getFloat();
         }
 
+        return reconstructions;
+    }
+
+    public boolean predictWithThreshold(float[] inputData) {
+        float[] reconstructions = this.predict(inputData);
         float mse = 0.0f;
         for (int i = 0; i < inputData.length; i++) {
             float diff = reconstructions[i] - inputData[i];
@@ -107,14 +108,13 @@ public class AnomalyDetectorWrapper {
     }
 
     public void close() {
-        // ... (код закрытия остается без изменений) ...
         if (interpreter != null) {
             interpreter.close();
             interpreter = null;
             Log.i(TAG, "Interpreter closed.");
         }
         if (gpuDelegate != null) {
-            gpuDelegate.close(); // Важно закрывать делегат
+            gpuDelegate.close();
             gpuDelegate = null;
             Log.i(TAG, "GPU Delegate closed.");
         }

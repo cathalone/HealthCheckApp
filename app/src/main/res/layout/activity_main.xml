@@ -49,13 +49,35 @@
         android:textSize="20sp"
         android:text="PULSE:"/>
 
+    <TextView
+        android:id="@+id/arrhythmiaText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pulseText"
+        android:layout_marginTop="25dp"
+        android:textSize="20sp"
+        android:text="ARRHYTHMIA:"/>
+
+    <TextView
+        android:id="@+id/heightText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:text="R-PEAKS:"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/arrhythmiaText" />
+
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/lineChart1"
         android:layout_width="400dp"
         android:layout_height="125dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pulseText"
+        app:layout_constraintTop_toBottomOf="@+id/heightText"
         android:layout_marginTop="25dp"/>
 
     <com.github.mikephil.charting.charts.LineChart
@@ -67,14 +89,14 @@
         app:layout_constraintTop_toBottomOf="@+id/lineChart1"
         android:layout_marginTop="10dp"/>
 
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/lineChart3"
-        android:layout_width="400dp"
-        android:layout_height="125dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/lineChart2"
-        android:layout_marginTop="10dp"/>
+<!--    <com.github.mikephil.charting.charts.LineChart-->
+<!--        android:id="@+id/lineChart3"-->
+<!--        android:layout_width="400dp"-->
+<!--        android:layout_height="125dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/lineChart2"-->
+<!--        android:layout_marginTop="10dp"/>-->
 
 
 
